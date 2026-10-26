@@ -53,5 +53,4 @@ DEEPSEEK_API_KEY=sk-xxxx
 
 ## 说明
 
-- 需求中提到的“Kimi 大模型”应为笔误，实际提供的是 DeepSeek 的地址、模型名与 API Key，本实现按 DeepSeek 接入。
 - 接口地址：`https://api.deepseek.com/anthropic/v1/messages`（Anthropic 兼容格式，使用 `x-api-key` 鉴权）。
