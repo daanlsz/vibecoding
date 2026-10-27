@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 女友</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>" />
+</head>
+<body>
+  <div class="bg-decor" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <!-- 初始设定：选择性格 + 起名字 -->
+  <section class="setup" id="setup">
+    <div class="setup-card">
+      <div class="setup-head">
+        <h1>创建你的 AI 女友 💗</h1>
+        <p>先挑一种性格，再给她起个名字</p>
+      </div>
+      <div class="personality-grid" id="personalityGrid"></div>
+      <div class="name-row">
+        <label for="nameInput">她的名字</label>
+        <input id="nameInput" maxlength="16" placeholder="例如：小月、柚子、Lily…" autocomplete="off" />
+      </div>
+      <button class="start-btn" id="startBtn" disabled>开始聊天 →</button>
+    </div>
+  </section>
+
+  <!-- 聊天界面 -->
+  <div class="chat hidden" id="chat">
+    <header class="chat-header">
+      <div class="bot-avatar" id="botAvatar">💗</div>
+      <div class="bot-meta">
+        <h1 class="bot-name" id="botName">AI 女友</h1>
+        <p class="bot-status"><span class="status-dot"></span><span id="botStatus">在线</span></p>
+      </div>
+      <button class="clear-btn" id="resetBtn" title="重新设定女友">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </button>
+      <button class="clear-btn" id="clearBtn" title="清空对话">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </header>
+
+    <main class="chat-body" id="chatBody"></main>
+
+    <footer class="chat-footer">
+      <div class="input-box">
+        <textarea id="input" rows="1" placeholder="跟她说点什么吧，Enter 发送，Shift+Enter 换行…"></textarea>
+        <button class="send-btn" id="sendBtn" title="发送">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      </div>
+      <p class="footnote">内容由 AI 生成，请注意甄别</p>
+    </footer>
+  </div>
+
+  <script src="/static/axios.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
