@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="周公解梦 —— 描述你的梦境，AI 为您解读梦中寓意">
+  <title>周公解梦 · 星梦智能助手</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="dream">
+  <!-- 顶部导航栏 -->
+  <header class="page-nav">
+    <a class="nav-back" href="index.html" aria-label="返回首页">←</a>
+    <h1 class="nav-title">周公解梦</h1>
+    <span class="nav-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="page-main">
+    <!-- 输入区域 -->
+    <section class="panel-card">
+      <form id="dream-form" novalidate>
+        <!-- 梦境描述 -->
+        <div class="form-field">
+          <label class="field-label" for="dream-content">描述你的梦境</label>
+          <textarea class="field-input field-textarea-lg" id="dream-content" name="dream_content"
+                    rows="6" maxlength="1000"
+                    placeholder="请尽可能详细地描述你的梦境内容，例如：我梦到在一片花海中飞翔，周围都是金色的蝴蝶……"></textarea>
+          <p class="field-error" id="dream-error" role="alert"></p>
+        </div>
+
+        <!-- 梦境类型（多选，标签由 js/app.js 生成） -->
+        <div class="form-field">
+          <span class="field-label">梦境类型（选填）</span>
+          <div class="chip-scroll" id="dream-tags" role="group" aria-label="梦境类型"></div>
+        </div>
+
+        <!-- 做梦时间（单选） -->
+        <div class="form-field">
+          <span class="field-label">做梦时间（选填）</span>
+          <div class="radio-group" role="radiogroup" aria-label="做梦时间">
+            <label class="radio-item">
+              <input type="radio" name="dream_time" value="昨晚">
+              <span class="radio-dot" aria-hidden="true"></span>
+              <span class="radio-text">昨晚</span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="dream_time" value="近几天">
+              <span class="radio-dot" aria-hidden="true"></span>
+              <span class="radio-text">近几天</span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="dream_time" value="一周内">
+              <span class="radio-dot" aria-hidden="true"></span>
+              <span class="radio-text">一周内</span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="dream_time" value="更早">
+              <span class="radio-dot" aria-hidden="true"></span>
+              <span class="radio-text">更早</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn submit-btn-blue" id="submit-btn" disabled>解读梦境</button>
+      </form>
+    </section>
+
+    <!-- 结果展示区域（初始隐藏，提交后显示） -->
+    <section class="panel-card result-card hidden" id="result-card" aria-live="polite">
+      <h2 class="result-title">梦境解析</h2>
+
+      <p class="dream-brief hidden" id="dream-brief"></p>
+
+      <div class="keyword-tags hidden" id="keyword-tags"></div>
+
+      <div class="result-content" id="result-content"></div>
+
+      <div class="loading-dots loading-blue hidden" id="loading" aria-label="正在解读">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="result-error hidden" id="result-error">
+        <p class="error-text" id="error-text"></p>
+        <button type="button" class="retry-btn retry-btn-blue" id="retry-btn">重试</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>

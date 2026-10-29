@@ -1,0 +1,830 @@
+/* ============================================
+   星梦智能助手 · 全局样式
+   主题：深紫 / 靛蓝神秘星空风格
+   ============================================ */
+
+:root {
+  --bg-primary: #1a0a2e;
+  --bg-secondary: #0d1b3e;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --accent-purple: #8b5cf6;
+  --accent-blue: #3b82f6;
+  --card-bg-purple: rgba(139, 92, 246, 0.15);
+  --card-bg-blue: rgba(59, 130, 246, 0.15);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-bg-input: rgba(255, 255, 255, 0.08);
+  --error-color: #f87171;
+  --border-radius: 16px;
+  --font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: dark; /* 深色主题：让 date 等原生控件的图标/弹层适配 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  /* 深紫 → 深靛蓝渐变星空底色 */
+  background: linear-gradient(165deg, var(--bg-primary) 0%, #150d33 48%, var(--bg-secondary) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  min-height: 100dvh; /* 移动端地址栏收起时仍铺满 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ---------- 星星点缀 ---------- */
+/* 第一层：静态细碎星尘（平铺小星点） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, rgba(255, 255, 255, 0.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 118px 92px, rgba(255, 255, 255, 0.35) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 204px 46px, rgba(255, 255, 255, 0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 288px 140px, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 66px 188px, rgba(255, 255, 255, 0.4) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 340px 224px, rgba(255, 255, 255, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 158px 262px, rgba(255, 255, 255, 0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 402px 118px, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 34px 318px, rgba(255, 255, 255, 0.45) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 252px 356px, rgba(255, 255, 255, 0.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 446px 288px, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 196px 428px, rgba(255, 255, 255, 0.35) 50%, transparent 51%);
+  background-size: 480px 480px;
+}
+
+/* 第二层：缓慢闪烁的亮星 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 84px 128px, rgba(255, 255, 255, 0.9) 50%, transparent 51%),
+    radial-gradient(2px 2px at 372px 74px, rgba(190, 205, 255, 0.85) 50%, transparent 51%),
+    radial-gradient(2.5px 2.5px at 138px 388px, rgba(255, 255, 255, 0.8) 50%, transparent 51%),
+    radial-gradient(2px 2px at 428px 338px, rgba(205, 185, 255, 0.85) 50%, transparent 51%),
+    radial-gradient(2px 2px at 46px 452px, rgba(255, 255, 255, 0.75) 50%, transparent 51%);
+  background-size: 480px 480px;
+  animation: twinkle 4.5s ease-in-out infinite;
+}
+
+.app-header,
+.main-area,
+.app-footer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* ---------- 顶部导航栏 ---------- */
+.app-header {
+  text-align: center;
+  padding: 56px 24px 0;
+}
+
+.header-badge {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.25);
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+.app-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-shadow: 0 0 22px rgba(139, 92, 246, 0.55), 0 2px 12px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.6s ease-out 0.05s backwards;
+}
+
+.app-subtitle {
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  animation: fadeIn 0.6s ease-out 0.1s backwards;
+}
+
+/* ---------- 主体区域 ---------- */
+.main-area {
+  max-width: 480px; /* 移动端优先的主要设计宽度 */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  padding: 40px 20px 32px;
+}
+
+.feature-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 128px;
+  padding: 22px 20px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  color: var(--text-primary);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+.feature-card:nth-child(1) { animation-delay: 0.15s; }
+.feature-card:nth-child(2) { animation-delay: 0.3s; }
+
+/* 卡片 1：半透明紫色渐变 */
+.card-purple {
+  background: linear-gradient(135deg, var(--card-bg-purple) 0%, rgba(139, 92, 246, 0.05) 100%);
+}
+
+/* 卡片 2：半透明靛蓝渐变 */
+.card-blue {
+  background: linear-gradient(135deg, var(--card-bg-blue) 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+/* 图标容器 */
+.card-icon {
+  flex-shrink: 0;
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  border-radius: 18px;
+}
+
+.card-purple .card-icon {
+  background: rgba(139, 92, 246, 0.2);
+  box-shadow: inset 0 0 14px rgba(139, 92, 246, 0.35), 0 0 14px rgba(139, 92, 246, 0.15);
+}
+
+.card-blue .card-icon {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: inset 0 0 14px rgba(59, 130, 246, 0.35), 0 0 14px rgba(59, 130, 246, 0.15);
+}
+
+/* 文字区 */
+.card-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.card-desc {
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* 右侧箭头 */
+.card-arrow {
+  flex-shrink: 0;
+  font-size: 24px;
+  color: var(--text-tertiary);
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+/* ---------- 交互效果 ---------- */
+@media (hover: hover) {
+  .feature-card:hover {
+    transform: scale(1.03);
+  }
+
+  .card-purple:hover {
+    box-shadow: 0 0 28px rgba(139, 92, 246, 0.45);
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+
+  .card-blue:hover {
+    box-shadow: 0 0 28px rgba(59, 130, 246, 0.45);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+
+  .feature-card:hover .card-arrow {
+    color: var(--text-secondary);
+    transform: translateX(3px);
+  }
+}
+
+/* 按压缩放 */
+.feature-card:active {
+  transform: scale(0.97);
+}
+
+/* ---------- 底部 ---------- */
+.app-footer {
+  text-align: center;
+  padding: 0 20px calc(18px + env(safe-area-inset-bottom));
+}
+
+.app-footer p {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   子页面通用样式（horoscope / dream）
+   ============================================ */
+
+/* ---------- 顶部导航栏 ---------- */
+.page-nav {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  height: 56px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-back {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  transition: color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-back:hover {
+  color: var(--text-primary);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
+}
+
+.nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.nav-spacer { width: 36px; }
+
+/* ---------- 页面主体 ---------- */
+.page-main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 20px calc(32px + env(safe-area-inset-bottom));
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+/* ---------- 半透明卡片容器 ---------- */
+.panel-card {
+  padding: 24px 20px;
+  background: linear-gradient(160deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ---------- 表单字段 ---------- */
+.form-field + .form-field {
+  margin-top: 20px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.field-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text-primary);
+  background: var(--card-bg-input);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.field-input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.field-textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* 日期输入：原生日历图标反色以适配深色背景 */
+.date-field {
+  position: relative;
+}
+
+.date-field .field-input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.date-field .field-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.date-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+/* ---------- 星座选择网格（3 列 × 4 行） ---------- */
+.zodiac-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.zodiac-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 70px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zodiac-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.zodiac-item:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  color: var(--text-primary);
+}
+
+.zodiac-item.selected {
+  border-color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.18);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+
+/* ---------- 字段错误提示 ---------- */
+.field-error {
+  display: none;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--error-color);
+}
+
+.field-error.visible {
+  display: block;
+}
+
+/* ---------- 提交按钮 ---------- */
+.submit-btn {
+  width: 100%;
+  height: 50px;
+  margin-top: 24px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, filter 0.25s ease, transform 0.15s ease, opacity 0.25s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.5);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- 结果展示区域 ---------- */
+.result-card {
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+.result-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.result-title::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent-purple), var(--accent-blue));
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+}
+
+.result-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+
+.summary-chip {
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+}
+
+.result-content {
+  margin-top: 12px;
+}
+
+.result-content p {
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+}
+
+.result-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* loading：三个跳动的紫色圆点 */
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  padding: 26px 0 10px;
+}
+
+.loading-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.7);
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+/* 错误提示 + 重试按钮 */
+.result-error {
+  margin-top: 16px;
+  padding: 16px;
+  text-align: center;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 12px;
+}
+
+.error-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--error-color);
+}
+
+.retry-btn {
+  margin-top: 12px;
+  padding: 8px 28px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+}
+
+/* 通用隐藏工具类 */
+.hidden {
+  display: none !important;
+}
+
+/* ============================================
+   周公解梦页专属样式
+   ============================================ */
+
+/* 大高度梦境描述输入框（150-180px） */
+.field-textarea-lg {
+  min-height: 160px;
+}
+
+/* ---------- 横向滚动标签组 ---------- */
+.chip-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox 隐藏滚动条 */
+}
+
+.chip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dream-tag {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dream-tag:hover {
+  color: var(--text-primary);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* 选中：紫色背景 + 白色文字 */
+.dream-tag.selected {
+  background: var(--accent-purple);
+  color: #ffffff;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+/* ---------- 做梦时间单选组 ---------- */
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.radio-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* 隐藏原生 radio，用 .radio-dot 自定义外观 */
+.radio-item input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.radio-item input:checked + .radio-dot {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.45);
+}
+
+/* 选中：紫色（靛蓝）圆点 */
+.radio-item input:checked + .radio-dot::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+}
+
+.radio-item input:checked ~ .radio-text {
+  color: var(--text-primary);
+}
+
+.radio-item input:focus-visible + .radio-dot {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---------- 靛蓝渐变提交按钮 ---------- */
+.submit-btn-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.submit-btn-blue:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.5);
+}
+
+/* ---------- 结果区域 ---------- */
+/* 梦境摘要：引用块风格 */
+.dream-brief {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 0 10px 10px 0;
+}
+
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* 关键词彩色标签：紫 / 蓝 / 青三色轮换 */
+.keyword-tag {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+}
+
+.keyword-tag:nth-child(3n + 1) {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+}
+
+.keyword-tag:nth-child(3n + 2) {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.keyword-tag:nth-child(3n) {
+  color: #7dd3fc;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+/* loading 靛蓝变体 */
+.loading-dots.loading-blue span {
+  background: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.7);
+}
+
+/* 靛蓝重试按钮变体 */
+.retry-btn-blue {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.retry-btn-blue:hover {
+  background: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+}
+
+/* ---------- 动画 ---------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* 桌面端微调：内容居中，卡片稍大 */
+@media (min-width: 481px) {
+  .app-header {
+    padding-top: 72px;
+  }
+
+  .main-area {
+    gap: 26px;
+    padding-top: 56px;
+  }
+}
+
+/* 无障碍：减弱动态效果 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

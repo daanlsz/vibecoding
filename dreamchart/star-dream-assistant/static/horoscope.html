@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="星座分析测算 —— 输入星座信息，AI 为您深度解析性格与运势">
+  <title>星座分析测算 · 星梦智能助手</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="horoscope">
+  <!-- 顶部导航栏 -->
+  <header class="page-nav">
+    <a class="nav-back" href="index.html" aria-label="返回首页">←</a>
+    <h1 class="nav-title">星座分析测算</h1>
+    <span class="nav-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="page-main">
+    <!-- 输入表单区域 -->
+    <section class="panel-card">
+      <form id="horoscope-form" novalidate>
+        <!-- 姓名 -->
+        <div class="form-field">
+          <label class="field-label" for="name">您的姓名</label>
+          <input type="text" class="field-input" id="name" name="name"
+                 placeholder="请输入姓名" maxlength="20" autocomplete="name">
+          <p class="field-error" id="name-error" role="alert"></p>
+        </div>
+
+        <!-- 星座选择（12 星座由 js/app.js 生成） -->
+        <div class="form-field">
+          <span class="field-label" id="zodiac-label">您的星座</span>
+          <div class="zodiac-grid" id="zodiac-grid" aria-labelledby="zodiac-label"></div>
+          <p class="field-error" id="zodiac-error" role="alert"></p>
+        </div>
+
+        <!-- 出生日期 -->
+        <div class="form-field">
+          <label class="field-label" for="birthday">出生日期</label>
+          <div class="date-field">
+            <input type="date" class="field-input" id="birthday" name="birthday">
+            <span class="date-placeholder" id="date-placeholder">请选择出生日期</span>
+          </div>
+          <p class="field-error" id="birthday-error" role="alert"></p>
+        </div>
+
+        <!-- 想咨询的问题（选填） -->
+        <div class="form-field">
+          <label class="field-label" for="question">想咨询的问题（选填）</label>
+          <textarea class="field-input field-textarea" id="question" name="question"
+                    rows="3" placeholder="例如：最近适合换工作吗？" maxlength="200"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn" disabled>开始分析</button>
+      </form>
+    </section>
+
+    <!-- 结果展示区域（初始隐藏，提交后显示） -->
+    <section class="panel-card result-card hidden" id="result-card" aria-live="polite">
+      <h2 class="result-title">AI 分析结果</h2>
+
+      <div class="result-summary" id="result-summary"></div>
+
+      <div class="result-content" id="result-content"></div>
+
+      <div class="loading-dots hidden" id="loading" aria-label="正在分析">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="result-error hidden" id="result-error">
+        <p class="error-text" id="error-text"></p>
+        <button type="button" class="retry-btn" id="retry-btn">重试</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>
