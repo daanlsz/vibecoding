@@ -3,7 +3,9 @@ AI 女友对话机器人后端（零依赖，仅用 Python 标准库）
 
 功能：
   1. 托管 static/ 目录下的前端页面（HTML / CSS / JS / axios）
-  2. 提供 /api/chat 接口，将「性格 + 名字 + 对话历史」打包成女友人设，
+  2. 注册 / 登录：账号密码存入本地 SQLite（ai_girlfriend.db），密码加盐哈希
+  3. 聊天记录持久化：按「用户名 + 性格 + 女友名」三键存取，三键一致才加载历史
+  4. /api/chat 将「性格 + 名字 + 对话历史」打包成女友人设，
      转发到智谱 BigModel 的 GLM 大模型（OpenAI 兼容接口）
 
 启动：
@@ -11,15 +13,25 @@ AI 女友对话机器人后端（零依赖，仅用 Python 标准库）
   然后浏览器打开 http://127.0.0.1:5000
 """
 
+import hashlib
 import json
 import os
+import secrets
+import sqlite3
 import urllib.error
 import urllib.request
+from contextlib import closing
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+
+# 本地 SQLite 数据库（用户账号 + 聊天记录），保存在项目目录下
+DB_PATH = BASE_DIR / "ai_girlfriend.db"
+PBKDF2_ITERATIONS = 100_000
 
 # 智谱 BigModel 大模型接口配置（OpenAI 兼容格式）
 API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
@@ -160,6 +172,135 @@ def load_api_key():
 API_KEY = load_api_key()
 
 
+def sanitize_username(username):
+    """清洗登录用户名（与注册时保持同一格式，用于记录归档）。"""
+    return str(username or "").strip()[:20]
+
+
+def validate_credentials(username, password, check_password=True):
+    """校验注册/登录输入，合法返回 (True, None)，否则 (False, 原因)。"""
+    if not (2 <= len(username) <= 20):
+        return False, "用户名需为 2~20 个字符"
+    if check_password and not (6 <= len(password) <= 64):
+        return False, "密码需为 6~64 个字符"
+    return True, None
+
+
+# ---------- 数据库（sqlite3，每次操作独立连接，适配多线程） ----------
+
+def db_connect():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA journal_mode=WAL")
+    return conn
+
+
+def init_db():
+    """建库建表（已存在则跳过）。"""
+    with closing(db_connect()) as conn, conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                username   TEXT UNIQUE NOT NULL,
+                password   TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                username    TEXT NOT NULL,
+                personality TEXT NOT NULL,
+                gf_name     TEXT NOT NULL,
+                role        TEXT NOT NULL,
+                content     TEXT NOT NULL,
+                created_at  TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_chat_key "
+            "ON chat_history(username, personality, gf_name)"
+        )
+
+
+def hash_password(password, salt=None):
+    """pbkdf2 加盐哈希，返回「盐$摘要」串，数据库中不存明文密码。"""
+    if salt is None:
+        salt = secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), bytes.fromhex(salt), PBKDF2_ITERATIONS
+    ).hex()
+    return salt + "$" + digest
+
+
+def register_user(username, password):
+    """注册新用户，成功返回 (True, None)，失败返回 (False, 原因)。"""
+    try:
+        with closing(db_connect()) as conn, conn:
+            conn.execute(
+                "INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)",
+                (username, hash_password(password), datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            )
+        return True, None
+    except sqlite3.IntegrityError:
+        return False, "该用户名已被注册"
+
+
+def verify_user(username, password):
+    """校验账号密码，成功返回 (True, None)，失败返回 (False, 原因)。"""
+    with closing(db_connect()) as conn:
+        row = conn.execute(
+            "SELECT password FROM users WHERE username = ?", (username,)
+        ).fetchone()
+    if row is None:
+        return False, "用户不存在，请先注册"
+    if secrets.compare_digest(hash_password(password, row[0].partition("$")[0]), row[0]):
+        return True, None
+    return False, "密码错误"
+
+
+def save_chat_pair(username, personality, gf_name, user_text, assistant_text):
+    """把一轮对话（用户消息 + 女友回复）写入聊天记录。"""
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with closing(db_connect()) as conn, conn:
+        conn.executemany(
+            "INSERT INTO chat_history (username, personality, gf_name, role, content, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            [
+                (username, personality, gf_name, "user", user_text, now_str),
+                (username, personality, gf_name, "assistant", assistant_text, now_str),
+            ],
+        )
+
+
+def load_chat_history(username, personality, gf_name):
+    """按「用户名 + 性格 + 女友名」三键读取历史，任一不一致即为空列表（不加载）。"""
+    with closing(db_connect()) as conn:
+        rows = conn.execute(
+            "SELECT role, content, created_at FROM chat_history "
+            "WHERE username = ? AND personality = ? AND gf_name = ? "
+            "ORDER BY id ASC LIMIT 1000",
+            (username, personality, gf_name),
+        ).fetchall()
+    return [
+        {"role": role, "content": content, "created_at": created_at}
+        for role, content, created_at in rows
+    ]
+
+
+def clear_chat_history(username, personality, gf_name):
+    """清空某个「用户名 + 性格 + 女友名」组合的聊天记录。"""
+    with closing(db_connect()) as conn, conn:
+        conn.execute(
+            "DELETE FROM chat_history "
+            "WHERE username = ? AND personality = ? AND gf_name = ?",
+            (username, personality, gf_name),
+        )
+
+
 def sanitize_name(name):
     """清洗用户输入的名字，防止注入过长或换行内容。"""
     name = str(name or "").strip()
@@ -227,7 +368,7 @@ def call_glm(system_prompt, messages):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "AIGirlfriend/1.0"
+    server_version = "AIGirlfriend/1.1"
 
     # ---------- 通用 ----------
     def _set_cors(self):
@@ -269,23 +410,102 @@ class Handler(BaseHTTPRequestHandler):
             self._send_static("index.html")
         elif path.startswith("/static/"):
             self._send_static(path[len("/static/"):])
+        elif path == "/api/history":
+            self._handle_history()
         else:
             self.send_error(404)
 
     # ---------- POST ----------
     def do_POST(self):
-        if self.path.split("?", 1)[0] != "/api/chat":
+        path = self.path.split("?", 1)[0]
+        routes = {
+            "/api/chat": self._handle_chat,
+            "/api/register": self._handle_register,
+            "/api/login": self._handle_login,
+            "/api/clear": self._handle_clear,
+        }
+        handler = routes.get(path)
+        if handler is None:
             self._send_json(404, {"error": "接口不存在"})
             return
 
         length = int(self.headers.get("Content-Length", 0))
         raw = self.rfile.read(length) if length else b""
         try:
-            body = json.loads(raw.decode("utf-8"))
+            body = json.loads(raw.decode("utf-8")) if raw else {}
         except (ValueError, UnicodeDecodeError):
             self._send_json(400, {"error": "请求体不是合法的 JSON"})
             return
+        if not isinstance(body, dict):
+            self._send_json(400, {"error": "请求体必须是 JSON 对象"})
+            return
+        handler(body)
 
+    def _handle_register(self, body):
+        username = str(body.get("username", "")).strip()
+        password = str(body.get("password", ""))
+        ok, reason = validate_credentials(username, password)
+        if not ok:
+            self._send_json(400, {"error": reason})
+            return
+        try:
+            ok, reason = register_user(username, password)
+        except Exception as e:
+            self._send_json(500, {"error": "注册失败：%s" % e})
+            return
+        if not ok:
+            self._send_json(409, {"error": reason})
+            return
+        self._send_json(200, {"ok": True, "username": username})
+
+    def _handle_login(self, body):
+        username = str(body.get("username", "")).strip()
+        password = str(body.get("password", ""))
+        ok, reason = validate_credentials(username, password, check_password=False)
+        if not ok:
+            self._send_json(400, {"error": reason})
+            return
+        try:
+            ok, reason = verify_user(username, password)
+        except Exception as e:
+            self._send_json(500, {"error": "登录失败：%s" % e})
+            return
+        if not ok:
+            self._send_json(401, {"error": reason})
+            return
+        self._send_json(200, {"ok": True, "username": username})
+
+    def _handle_clear(self, body):
+        username = sanitize_username(body.get("username"))
+        personality = str(body.get("personality", "")).strip()[:32]
+        gf_name = sanitize_name(body.get("name", ""))
+        if not (username and personality and gf_name):
+            self._send_json(400, {"error": "缺少 username / personality / name 参数"})
+            return
+        try:
+            clear_chat_history(username, personality, gf_name)
+        except Exception as e:
+            self._send_json(500, {"error": "清空记录失败：%s" % e})
+            return
+        self._send_json(200, {"ok": True})
+
+    def _handle_history(self):
+        query = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+        username = sanitize_username(query.get("username", [""])[0])
+        personality = (query.get("personality", [""])[0] or "").strip()[:32]
+        gf_name = sanitize_name(query.get("name", [""])[0])
+        if not (username and personality and gf_name):
+            # 三键不完整 → 不加载任何历史
+            self._send_json(200, {"messages": []})
+            return
+        try:
+            messages = load_chat_history(username, personality, gf_name)
+        except Exception as e:
+            self._send_json(500, {"error": "读取聊天记录失败：%s" % e})
+            return
+        self._send_json(200, {"messages": messages})
+
+    def _handle_chat(self, body):
         messages = body.get("messages", [])
         clean = [
             {"role": m["role"], "content": m.get("content", "")}
@@ -296,7 +516,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "缺少 messages 参数"})
             return
 
-        personality = body.get("personality", "sensitive")
+        username = sanitize_username(body.get("username"))
+        personality = str(body.get("personality", "sensitive"))
         name = sanitize_name(body.get("name", ""))
         system_prompt = build_system_prompt(personality, name)
 
@@ -312,6 +533,13 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             self._send_json(500, {"error": "服务器内部错误：%s" % e})
             return
+
+        # 登录用户才持久化：只存本轮「最后的用户消息 + 女友回复」，避免整段历史重复入库
+        if username and clean[-1]["role"] == "user":
+            try:
+                save_chat_pair(username, personality, name, clean[-1]["content"], reply)
+            except Exception as e:
+                print("聊天记录写入失败：%s" % e)
 
         self._send_json(200, {"reply": reply})
 
@@ -331,6 +559,8 @@ def main():
     port = int(os.environ.get("PORT", "5000"))
     if not API_KEY:
         print("警告：未检测到 API Key，请在 .env 文件中设置 ZHIPU_API_KEY")
+    init_db()
+    print("数据库就绪：%s" % DB_PATH)
     print("AI 女友已上线：http://%s:%d  (模型：%s，思考强度：%s)" % (host, port, MODEL, REASONING_EFFORT))
     print("(Ctrl+C 停止)")
     server = ThreadingHTTPServer((host, port), Handler)

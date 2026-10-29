@@ -14,12 +14,39 @@
     <span class="blob blob-3"></span>
   </div>
 
+  <!-- 登录 / 注册 -->
+  <section class="auth" id="auth">
+    <div class="auth-card">
+      <div class="auth-head">
+        <h1>AI 女友 💗</h1>
+        <p>登录或注册，你们的对话会被好好保存</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" type="button">登录</button>
+        <button class="auth-tab" id="tabRegister" type="button">注册</button>
+      </div>
+      <form class="auth-form" id="authForm">
+        <div class="auth-field">
+          <label for="authUsername">用户名</label>
+          <input id="authUsername" maxlength="20" placeholder="2~20 个字符" autocomplete="username" />
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">密码</label>
+          <input id="authPassword" type="password" maxlength="64" placeholder="输入密码" autocomplete="current-password" />
+        </div>
+        <p class="auth-error hidden" id="authError"></p>
+        <button class="start-btn" id="authSubmit" type="submit">登录</button>
+      </form>
+    </div>
+  </section>
+
   <!-- 初始设定：选择性格 + 起名字 -->
-  <section class="setup" id="setup">
+  <section class="setup hidden" id="setup">
     <div class="setup-card">
       <div class="setup-head">
         <h1>创建你的 AI 女友 💗</h1>
         <p>先挑一种性格，再给她起个名字</p>
+        <p class="setup-user">当前账号：<b id="setupUser"></b><button class="link-btn" id="setupLogout" type="button">退出登录</button></p>
       </div>
       <div class="personality-grid" id="personalityGrid"></div>
       <div class="name-row">
@@ -38,6 +65,13 @@
         <h1 class="bot-name" id="botName">AI 女友</h1>
         <p class="bot-status"><span class="status-dot"></span><span id="botStatus">在线</span></p>
       </div>
+      <button class="clear-btn" id="logoutBtn" title="退出登录">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
       <button class="clear-btn" id="resetBtn" title="重新设定女友">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>

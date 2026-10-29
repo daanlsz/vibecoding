@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="星梦智能助手 —— 登录或注册账号，开启星座与解梦之旅">
+  <title>登录 · 星梦智能助手</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="auth">
+  <!-- 顶部导航栏 -->
+  <header class="app-header">
+    <div class="header-badge">✧</div>
+    <h1 class="app-title">星梦智能助手</h1>
+    <p class="app-subtitle">登录后开启你的星座与解梦之旅</p>
+  </header>
+
+  <!-- 登录 / 注册卡片 -->
+  <main class="main-area">
+    <section class="panel-card auth-card">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab selected" data-tab="login" role="tab" aria-selected="true">登录</button>
+        <button type="button" class="auth-tab" data-tab="register" role="tab" aria-selected="false">注册</button>
+      </div>
+
+      <form id="auth-form" novalidate>
+        <!-- 用户名 -->
+        <div class="form-field">
+          <label class="field-label" for="username">用户名</label>
+          <input type="text" class="field-input" id="username" name="username"
+                 placeholder="2-20 个字符" maxlength="20" autocomplete="username">
+          <p class="field-error" id="username-error" role="alert"></p>
+        </div>
+
+        <!-- 密码 -->
+        <div class="form-field">
+          <label class="field-label" for="password">密码</label>
+          <input type="password" class="field-input" id="password" name="password"
+                 placeholder="请输入密码" maxlength="32" autocomplete="current-password">
+          <p class="field-error" id="password-error" role="alert"></p>
+        </div>
+
+        <!-- 表单级错误提示（如：用户名或密码错误） -->
+        <p class="auth-hint hidden" id="auth-hint" role="alert"></p>
+
+        <button type="submit" class="submit-btn" id="auth-submit">登 录</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- 底部 -->
+  <footer class="app-footer">
+    <p>Powered by AI · 仅供娱乐参考</p>
+  </footer>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>

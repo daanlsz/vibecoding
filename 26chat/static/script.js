@@ -1,15 +1,31 @@
 /* ---------- DOM ---------- */
+const auth = document.getElementById('auth');
 const setup = document.getElementById('setup');
 const chat = document.getElementById('chat');
+
+// 登录 / 注册
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const authForm = document.getElementById('authForm');
+const authUsername = document.getElementById('authUsername');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authSubmit = document.getElementById('authSubmit');
+
+// 女友设定
 const personalityGrid = document.getElementById('personalityGrid');
 const nameInput = document.getElementById('nameInput');
 const startBtn = document.getElementById('startBtn');
+const setupUser = document.getElementById('setupUser');
+const setupLogout = document.getElementById('setupLogout');
 
+// 聊天
 const chatBody = document.getElementById('chatBody');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resetBtn = document.getElementById('resetBtn');
+const logoutBtn = document.getElementById('logoutBtn');
 const botAvatar = document.getElementById('botAvatar');
 const botName = document.getElementById('botName');
 const botStatus = document.getElementById('botStatus');
@@ -38,11 +54,120 @@ const PERSONALITIES = [
     greeting: '听好了，我叫{name}。既然你选了我，那你就是我的男朋友了，以后都要听我的，懂了吗？——不过放心，我会把你照顾好的。' },
 ];
 
-let selectedId = null;
-let gfName = '';
+/* ---------- 状态 ---------- */
+let currentUser = localStorage.getItem('gf_user') || '';   // 登录用户名
+let selectedId = null;       // 女友性格 id
+let gfName = '';             // 女友名字
 let currentGreeting = '';
-const history = [];   // 发送给后端的对话历史（不含欢迎语）
+let authMode = 'login';      // login / register
 let busy = false;
+const history = [];          // 发送给后端的对话历史（不含欢迎语）
+
+/* ---------- 页面切换 ---------- */
+function hideAllPages() {
+  auth.classList.add('hidden');
+  setup.classList.add('hidden');
+  chat.classList.add('hidden');
+}
+
+function showAuth() {
+  hideAllPages();
+  auth.classList.remove('hidden');
+  authUsername.focus();
+}
+
+function showSetup() {
+  hideAllPages();
+  setupUser.textContent = currentUser;
+  setup.classList.remove('hidden');
+  nameInput.focus();
+}
+
+/* ---------- 登录状态缓存 ---------- */
+function saveSession() {
+  localStorage.setItem('gf_session', JSON.stringify({ personality: selectedId, name: gfName }));
+}
+
+function readSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem('gf_session') || 'null');
+    if (s && PERSONALITIES.some(p => p.id === s.personality) && s.name) return s;
+  } catch (e) { /* 忽略损坏的缓存 */ }
+  return null;
+}
+
+function clearSession() {
+  localStorage.removeItem('gf_session');
+}
+
+/* ---------- 登录 / 注册 ---------- */
+function setAuthMode(mode) {
+  authMode = mode;
+  tabLogin.classList.toggle('active', mode === 'login');
+  tabRegister.classList.toggle('active', mode === 'register');
+  authSubmit.textContent = mode === 'login' ? '登录' : '注册并进入';
+  authPassword.placeholder = mode === 'login' ? '输入密码' : '至少 6 位';
+  authPassword.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+  authError.classList.add('hidden');
+}
+
+tabLogin.addEventListener('click', () => setAuthMode('login'));
+tabRegister.addEventListener('click', () => setAuthMode('register'));
+
+function showAuthError(msg) {
+  authError.textContent = msg;
+  authError.classList.remove('hidden');
+}
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (busy) return;
+  const username = authUsername.value.trim();
+  const password = authPassword.value;
+  if (username.length < 2 || username.length > 20) return showAuthError('用户名需为 2~20 个字符');
+  if (authMode === 'register' && password.length < 6) return showAuthError('密码至少 6 位');
+  if (!password) return showAuthError('请输入密码');
+
+  busy = true;
+  authSubmit.disabled = true;
+  authSubmit.textContent = authMode === 'login' ? '登录中…' : '注册中…';
+  try {
+    await axios.post(authMode === 'login' ? '/api/login' : '/api/register', { username, password });
+    currentUser = username;
+    localStorage.setItem('gf_user', username);
+    authPassword.value = '';
+    clearSession();
+    showSetup();
+  } catch (err) {
+    const msg = (err.response && err.response.data && err.response.data.error)
+      || err.message || '请求失败，请稍后重试';
+    showAuthError(msg);
+  } finally {
+    busy = false;
+    authSubmit.disabled = false;
+    authSubmit.textContent = authMode === 'login' ? '登录' : '注册并进入';
+  }
+});
+
+/* ---------- 退出登录 ---------- */
+function logout() {
+  if (busy) return;
+  currentUser = '';
+  localStorage.removeItem('gf_user');
+  clearSession();
+  history.length = 0;
+  chatBody.innerHTML = '';
+  selectedId = null;
+  gfName = '';
+  nameInput.value = '';
+  authUsername.value = '';
+  document.querySelectorAll('.p-card').forEach(c => c.classList.remove('selected'));
+  updateStartState();
+  showAuth();
+}
+
+logoutBtn.addEventListener('click', logout);
+setupLogout.addEventListener('click', logout);
 
 /* ---------- 初始设定 ---------- */
 function renderPersonalities() {
@@ -83,35 +208,67 @@ nameInput.addEventListener('keydown', (e) => {
 
 startBtn.addEventListener('click', start);
 
-function start() {
+async function start() {
   if (!selectedId || busy) return;
   const name = nameInput.value.trim();
   if (!name) { nameInput.focus(); return; }
 
-  gfName = name;
-  const p = PERSONALITIES.find(x => x.id === selectedId);
-  currentGreeting = p.greeting.replace(/\{name\}/g, gfName);
+  // 「用户名 + 性格 + 名字」一致才由后端返回历史记录
+  busy = true;
+  startBtn.disabled = true;
+  startBtn.textContent = '加载中…';
+  try {
+    const res = await axios.get('/api/history', {
+      params: { username: currentUser, personality: selectedId, name },
+      timeout: 15000,
+    });
+    enterChat(selectedId, name, res.data.messages || []);
+  } catch (err) {
+    // 拉取历史失败也允许进入聊天，只是不带历史
+    enterChat(selectedId, name, []);
+  } finally {
+    busy = false;
+    startBtn.disabled = false;
+    startBtn.textContent = '开始聊天 →';
+  }
+}
 
-  botName.textContent = gfName;
-  botAvatar.textContent = gfName.charAt(0);
+function enterChat(personalityId, name, savedMessages) {
+  selectedId = personalityId;
+  gfName = name;
+  const p = PERSONALITIES.find(x => x.id === personalityId) || PERSONALITIES[0];
+  currentGreeting = p.greeting.replace(/\{name\}/g, name);
+
+  botName.textContent = name;
+  botAvatar.textContent = name.charAt(0);
   botStatus.textContent = p.label + ' · 在线';
 
   history.length = 0;
   chatBody.innerHTML = '';
-  setup.classList.add('hidden');
+  if (savedMessages && savedMessages.length) {
+    // 三键一致 → 恢复历史聊天记录（带原始时间）
+    savedMessages.forEach(m => {
+      addMessage(m.role === 'assistant' ? 'ai' : 'user', m.content, m.created_at);
+      history.push({ role: m.role, content: m.content });
+    });
+  } else {
+    addMessage('ai', currentGreeting);
+  }
+
+  saveSession();
+  hideAllPages();
   chat.classList.remove('hidden');
-  addMessage('ai', currentGreeting);
+  scrollToBottom();
   input.focus();
 }
 
 function reset() {
   if (busy) return;
-  chat.classList.add('hidden');
-  setup.classList.remove('hidden');
-  selectedId = null;
-  gfName = '';
-  nameInput.value = '';
-  document.querySelectorAll('.p-card').forEach(c => c.classList.remove('selected'));
+  clearSession();
+  showSetup();
+  // 预填当前女友设定，方便微调后重新进入
+  if (selectedId) selectPersonality(selectedId);
+  if (gfName) nameInput.value = gfName;
   updateStartState();
   nameInput.focus();
 }
@@ -129,6 +286,17 @@ function escapeHtml(s) {
 function now() {
   const d = new Date();
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+function formatTime(s) {
+  // 数据库时间「YYYY-MM-DD HH:MM:SS」→ 当天只显示 HH:MM，跨天带上日期
+  const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return now();
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const sameDay = m[1] === String(d.getFullYear())
+    && m[2] === pad(d.getMonth() + 1) && m[3] === pad(d.getDate());
+  return sameDay ? m[4] + ':' + m[5] : m[2] + '-' + m[3] + ' ' + m[4] + ':' + m[5];
 }
 
 function gfAvatar() {
@@ -193,7 +361,8 @@ function renderMarkdown(raw) {
 }
 
 /* ---------- 消息渲染 ---------- */
-function createMessageEl(role, content) {
+function createMessageEl(role, content, timeStr) {
+  const time = timeStr ? formatTime(timeStr) : now();
   const msg = document.createElement('div');
   msg.className = 'msg ' + role;
 
@@ -201,17 +370,17 @@ function createMessageEl(role, content) {
     msg.innerHTML =
       '<div class="avatar">' + gfAvatar() + '</div>' +
       '<div class="bubble">' + renderMarkdown(content) + '</div>' +
-      '<div class="time">' + now() + '</div>';
+      '<div class="time">' + time + '</div>';
   } else {
     msg.innerHTML =
       '<div class="bubble">' + escapeHtml(content).replace(/\n/g, '<br>') + '</div>' +
-      '<div class="time">' + now() + '</div>';
+      '<div class="time">' + time + '</div>';
   }
   return msg;
 }
 
-function addMessage(role, content) {
-  chatBody.appendChild(createMessageEl(role, content));
+function addMessage(role, content, timeStr) {
+  chatBody.appendChild(createMessageEl(role, content, timeStr));
   scrollToBottom();
 }
 
@@ -251,6 +420,7 @@ async function send() {
   setBusy(true);
   try {
     const res = await axios.post('/api/chat', {
+      username: currentUser,
       personality: selectedId,
       name: gfName,
       messages: history,
@@ -285,14 +455,41 @@ input.addEventListener('keydown', (e) => {
 });
 sendBtn.addEventListener('click', send);
 
-/* ---------- 清空对话 ---------- */
-clearBtn.addEventListener('click', () => {
+/* ---------- 清空对话（同步清空数据库记录） ---------- */
+clearBtn.addEventListener('click', async () => {
   if (busy) return;
   history.length = 0;
   chatBody.innerHTML = '';
   addMessage('ai', currentGreeting);
+  try {
+    await axios.post('/api/clear', {
+      username: currentUser,
+      personality: selectedId,
+      name: gfName,
+    });
+  } catch (err) { /* 清库失败不影响本地清空 */ }
 });
 
 /* ---------- 初始化 ---------- */
-renderPersonalities();
-nameInput.focus();
+async function boot() {
+  renderPersonalities();
+  setAuthMode('login');
+
+  if (!currentUser) { showAuth(); return; }
+
+  // 上次聊到一半 → 直接回到聊天页并恢复记录
+  const saved = readSession();
+  if (saved) {
+    try {
+      const res = await axios.get('/api/history', {
+        params: { username: currentUser, personality: saved.personality, name: saved.name },
+        timeout: 15000,
+      });
+      enterChat(saved.personality, saved.name, res.data.messages || []);
+      return;
+    } catch (err) { /* 恢复失败则回到设定页 */ }
+  }
+  showSetup();
+}
+
+boot();
